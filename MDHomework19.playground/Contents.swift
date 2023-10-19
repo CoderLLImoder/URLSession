@@ -1,4 +1,5 @@
 import Foundation
+import CryptoKit
 
 func getData(urlRequest: URL?, completion: @escaping ((String) -> Void)) {
     
@@ -18,19 +19,32 @@ func getData(urlRequest: URL?, completion: @escaping ((String) -> Void)) {
     }.resume()
 }
 
+func MD5(string: String) -> String {
+    let digest = Insecure.MD5.hash(data: Data(string.utf8))
+
+    return digest.map {
+        String(format: "%02hhx", $0)
+    }.joined()
+}
+
 func makeRequest(host: String) -> URL? {
+    var pk = "9d9bdabab8b1d7670eadccbc97945fb3aaa8ba86"
+    var ts = "1"
+    var apikey = "f85865d962e7db44477b478f45ac83ed"
     var urlComponents = URLComponents()
     urlComponents.scheme = "https"
     urlComponents.host = host
     urlComponents.path = "/v1/public/comics"
-    urlComponents.queryItems = [URLQueryItem(name: "ts", value: "1"),
-                                URLQueryItem(name: "apikey", value: "f85865d962e7db44477b478f45ac83ed"),
-                                URLQueryItem(name: "hash", value: "4e4a85782dc48dd3f18232688703eed2")]
+    urlComponents.queryItems = [URLQueryItem(name: "ts", value: ts),
+                                URLQueryItem(name: "apikey", value: apikey),
+                                URLQueryItem(name: "hash", value: MD5(string: ts+pk+apikey))]
     guard let url = urlComponents.url else {
         return nil
     }
     
     return url
 }
+
+
 
 getData(urlRequest: makeRequest(host: "gateway.marvel.com"), completion: {info in print(info)})
